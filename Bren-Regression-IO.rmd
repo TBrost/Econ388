@@ -12,10 +12,19 @@ output:
 library(pander)
 library(tidyverse)
 library(readxl)
+library(stargazer)
 library(plotly)
 library(reshape2)
-IO_airfare <- read_excel("IO airfare.xls")
-colnames(IO_airfare) <- c("year", "origin", "destin", "id", "dist", "passen", "fare", "bkmtshr", "ldist", "y98", "y99", "y00", "lfare","ldistsq", "concen", "lpassen")
+X401ksubs <- read_excel("401ksubs.xls")
+Bren_School_Data <- read_excel("Bren School Data.xlsx")
+
+```
+
+```{r}
+Bren_School_Data$isCA <- case_when(Bren_School_Data$State == "CA" ~ 1, Bren_School_Data$State!= "CA" ~0)
+
+
+for(level in unique(Bren_School_Data$State)){Bren_School_Data[paste("State", level, sep="_")] <- ifelse(Bren_School_Data$State == level,1,0)}
 
 ```
 
@@ -23,13 +32,13 @@ colnames(IO_airfare) <- c("year", "origin", "destin", "id", "dist", "passen", "f
 
 ### Problem #1 {.tabset .tabset-pills .tabset-fade}
 
-#### Part A/B {.tabset .tabset-pills .tabset-fade}
+#### Part 1-5 {.tabset .tabset-pills .tabset-fade}
 
 ##### Hypothesize a linear regression relationship:
 I wanted to build on my previous hypothesis that distance could be used to predict the fare of a route by adding the number of passengers who fly the route per day on average. I feel like more popular flights would be cheaper than those with low flight traffic. Additionally I felt that the best 3rd explanatory variable to include in this analysis was the relationship between distance and passengers. The other options based on the provided dataset just didn't seem to mesh as well with the two that I have included already.
 
 $$
-\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{distance} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} + \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{dist:passen} + \epsilon_i
+\underbrace{Y_i}_\text{Inf Adj Price/Acre-foot} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base Price/foot}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{distance} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} + \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{dist:passen} + \epsilon_i
 $$
 
 
@@ -38,8 +47,10 @@ $$
 Below is the Multiple regression result using distance, passengers, and the distance/passenger relationship.
 
 ```{r}
-lm.mult <-lm(fare ~ dist + passen + dist:passen, data=IO_airfare)
-summary(lm.mult) %>%
+lm.mult <-lm(`Inflation Adjusted Price per Annual Acre-Foot` ~ `Average Annual Acre-Feet` + Year + State + Sale + `Ag-to-Urban`+ `Ag-to-Enivo` + `Urban-to-Urban`+ `Urban-to-Ag`+ `Urban-to-Enviro` + `Enviro-to-Urban`+ `Enviro-to-Ag`+ `Enviro-to-Enviro`, data=Bren_School_Data)
+summary(lm.mult)
+confint(lm.mult, level=0.95)
+
 pander(caption= "HW 3 Simple Multiple regression results")
 ```
 
@@ -60,15 +71,6 @@ lm.sim <-lm(fare ~ dist, data=IO_airfare)
 summary(lm.sim) %>%
 pander(caption= "HW 2 simple regression results")
 ```
-
-##### Completed Regression Equation
-
-Here is the original equation for the regression with the appropriate coefficients now included.
-
-$$
-\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{118.7}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{0.06534}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{distance} + \overbrace{-0.0212}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} + \overbrace{1.537e-05}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{dist:passen} + \epsilon_i
-$$
-
 
 
 ```{r eval=FALSE, include=FALSE}
