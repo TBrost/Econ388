@@ -62,42 +62,52 @@ $$
 \underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{distance} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} + \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{3i}}_\text{LargeShare} + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{dist:passen}  +  \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{3i}X_{2i}}_\text{LargeShare:passen} +\epsilon_i
 $$
 
+This regression just tells us that every mile traveled increases fare by 7 cents, every passenger decreases fare by 1.3 cents, and the more concentrated the market is, the more fare is as well. Then the interaction terms give us an idea of if there are statistically significant interactions between distance, passengers, and market share. In interpreting the interaction variables, we see that market share and passengers interact with each other in a way that decreases the price of airfare, while distance and passengers interact to increase it. 
 
 ##### + Squared term
 
+
+Interpret your regression equation and explain what this new squared term tells you about the dependent variable.
+
 ```{r}
-lm.mult3 <-lm(fare ~ distsq + passen + distsq:passen + LargeShare + LargeShare:passen, data=IO_airfare)
+lm.mult3 <-lm(fare ~ dist + distsq + passen + distsq:passen + LargeShare + LargeShare:passen, data=IO_airfare)
 summary(lm.mult3) %>%
 pander(caption= "HW 4 Multiple regression results w/ extra estimators")
 ```
 
-Interpret your regression equation and explain what this new squared term tells you about the dependent variable.
 
 $$
-\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{dist(squared)} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} + \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{y-int}}} + \underbrace{X_{3i}}_\text{LargeShare} + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{dist(squared):passen} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{3i}X_{2i}}_\text{LargeShare:passen} +\epsilon_i
+\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}}\underbrace{X_{1i}}_\text{dist} +
+\overbrace{\beta_2}^{\stackrel{\text{quadratic}}{\text{term}}}\underbrace{X_{2i}}_\text{dist(squared)} + \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{3i}}_\text{passen} + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{y-int}}} + \underbrace{X_{4i}}_\text{LargeShare} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{2i}X_{3i}}_\text{dist(squared):passen} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{4i}X_{3i}}_\text{LargeShare:passen} +\epsilon_i
 $$
 
+This regression is pretty similar to the first one, there is a positive relationship with distance squared and fare, negative relationship with passengers and fare, positive with market share and the interaction between distance and passengers as well as a negative coefficient for the interaction with passengers and market share. The distance squared term would give us an idea of if there is a breaking point with distance at which after a certain number of miles additional miles would make our fare cheaper/more expensive. In our case the vertex is:
+
+Vertex:
+```{r}
+-0.06583 / (0.000003027*2)
+```
+
+Given that our quadratic term beta is positive this is the point at which we would have the cheapest fare for the number of miles we are flying. We can roughly interpret the overall relationship of distance as positive, larger distances will result in an increased fare. our vertex is negative and since we cannot fly negative miles we must simply state that the your based on distance you can find the cheapest ticket by finding a flight of distance:0.
 
 
 ##### + Ln's
 
 ```{r}
-lm.mult4 <-lm(fare ~ ldistsq + passen + ldist:passen + LargeShare + LargeShare:passen, data=IO_airfare)
+lm.mult4 <-lm(fare ~ ldist + ldistsq + passen + ldist:passen + LargeShare + LargeShare:passen, data=IO_airfare)
 summary(lm.mult4) %>%
 pander(caption= "HW 4 Multiple regression results w/ extra estimators")
 ```
 $$
-\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{Ln(dist(squared))} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} +   \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{y-int}}} + \underbrace{X_{3i}}_\text{LargeShare} + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{Ln(dist(squared)):passen} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{3i}X_{2i}}_\text{LargeShare:passen} +\epsilon_i
+\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}}\underbrace{X_{1i}}_\text{ldist} +
+\overbrace{\beta_2}^{\stackrel{\text{quadratic}}{\text{term}}}\underbrace{X_{2i}}_\text{ldist(squared)} + \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{3i}}_\text{passen} + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{y-int}}} + \underbrace{X_{4i}}_\text{LargeShare} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{2i}X_{3i}}_\text{ldist(squared):passen} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{4i}X_{3i}}_\text{LargeShare:passen} +\epsilon_i
 $$
 
 
 This will create a log-lin model or a lin-log model.  Interpret the findings with this new variable.  What does it mean?
 
-##### Best Regression
+This new variable fit into the equation as a lin-log model, a 1% increase in distance squared results in a $\frac{\beta 1}{100}$ change in the fare. It is statistically significant to an $\alpha$ of <0.01. Numerically a 1% increase in distance squared results in an absolute change in fare of $5.
 
-Which of these three (new regressions) is the best equation to predict your dependent variable?  In comparing your three regression equations you should make sure to include the necessary evaluation techniques learned from chapter 2. 
-
-The best of the three new regressions is the first, with the addition of 2 interaction terms, This equations R^2 still falls short of our previous assignment and both its regressions though.
 
 ##### Confidence Intervals
 
@@ -109,88 +119,45 @@ pander(caption= "HW 5 Estimators 95% Conf Int's")
 Assuming that our decision to reject the null Hypothesis is correct then these 95% intervals capture the true coefficient values for each estimator 95% of the time given all possible results of our sample space. The most important result from these values is that non of the ranges include 0, so we can safely assume that each of these values are not equal to 0 at a 95% confidence level.
 
 
-##### Completed Regression Equation
+##### Best Regression Equation
 
-Here is the Base equation for the regression w/o Extra variables
+Which of these three (new regressions) is the best equation to predict your dependent variable?  In comparing your three regression equations you should make sure to include the necessary evaluation techniques learned from chapter 2. 
 
+Assumptions are accessed in the assumptions tab, the values are interpreted in the interpretations tab.
 
+Based of our adjusted R^2 values the first of the three new regressions allows us to account for the most variation.
 
 Here is the original equation for the regression with the appropriate coefficients now included.
 
 $$
-\underbrace{Y_i}_\text{lfare} \underbrace{=}_{\sim} \overbrace{8.074}^{\stackrel{\text{y-int}}{\text{base lfare}}} + \overbrace{-0.3854}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{ldistance} + \overbrace{-0.9208}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{lpassen} + \overbrace{0.1277}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{ldist:lpassen} + \epsilon_i
+\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{104.2}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{0.0728}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{distance} + \overbrace{-0.014}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} + \overbrace{31.76}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{3i}}_\text{LargeShare} + \overbrace{1.166e-05}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{dist:passen}  +  \overbrace{-0.0289}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{3i}X_{2i}}_\text{LargeShare:passen} +\epsilon_i
 $$
 
-
-
-```{r eval=FALSE, include=FALSE}
-library(rgl)
-knitr::knit_hooks$set(webgl = hook_webgl)
-```
 
 
 #### Plot
 
 A visualization of this regression as a whole would require a four dimensional plot. Decoding 4 dimensional images is so difficult it would likely add very little to the tabular outputs interpreted earlier, as such not plot will be created.
 
-```{r eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
-#b <- coef(lm.mult)
-## Hint: library(car) has a scatterplot 3d function which is simple to use
-#  but the code should only be run in your console, not knit.
-
-library(car)
-#scatter3d(fare ~ dist + passen, data=IO_airfare)
-
-
-
-## To embed the 3d-scatterplot inside of your html document is harder.
-
-
-#Perform the multiple regression
-
-#Graph Resolution (more important for more complex shapes)
-graph_reso <- 0.5
-
-#Setup Axis
-axis_x <- seq(min(IO_airfare$ldist), max(IO_airfare$ldist), by = graph_reso)
-axis_y <- seq(min(IO_airfare$lpassen), max(IO_airfare$lpassen), by = graph_reso)
-
-#Sample points
-lmnew <- expand.grid(ldist = axis_x, lpassen = axis_y, KEEP.OUT.ATTRS=F)
-lmnew$Z <- predict.lm(lm.mult2, newdata = lmnew)
-lmnew <- acast(lmnew, lpassen ~ ldist, value.var = "Z") #y ~ x
-
-#Create scatterplot
-plot_ly(IO_airfare, 
-        x = ~ldist, 
-        y = ~lpassen, 
-        z = ~lfare,
-        text = rownames(IO_airfare), 
-        type = "scatter3d", 
-        mode = "markers", color=~lfare) %>%
-  add_trace(z = lmnew,
-            x = axis_x,
-            y = axis_y,
-            type = "surface")
-
-  #add_trace(z = lmnew,
-   #         x = axis_x,
-    #        y = axis_y,
-     #       type = "surface")
-```
 #### Interpretation/Assumptions {.tabset .tabset-pills .tabset-fade}
 
 ##### Interpretation 
 
-Based on the multiple regression, the base cost of a ticket would be \$118.70, for each additional percentage increase in distance the fare would decrease by a percentage of 0.3852 and for each additional percent increase in average passengers the fare would decrease by a percentage of 0.9208. The strength or the relationship between Distance and passengers is ~0. The P-values for each of these terms are all incredibly close to 0.
-
-These relationships are visible best when viewing the 3d plot. It is quickly apparent that all estimators have similarly weighted affects on the predicted values, as the points are spread evenly through the central area of the chart.. 
+Based on the multiple regression, the base cost of a ticket would be \$104.2, for each additional increase in distance the fare would by 0.0728 and for each additional average passengers the fare would decrease by 0.0137. If the market share of the flight is greater than 0.75 then the fare increases by 31.76. The magnitude or the relationship between Distance and passengers is ~0.  The magnitude of the relationship between passengers and a market share over 0.75 is -0.0289. The P-values for each of these terms are all incredibly close to 0.
 
 ##### Assumptions
 
-Assuming that our sample is random the following Q-Q plots aid in examining the residuals of our points. The first primarily helps to show if variance remains constant across our variables. The second shows some minor signs of right skewness, we agree this is likely due to the fact that the regression fails to predict base costs of a flight leaving these values up to B0. The third and final plot helps determine if the order of the data is important, usually this is needed for time sorted data but we noticed this set is sorted alphabetically by origin point so we included this to see if any patterns presented themselves. 
+Assuming that our sample is random the following Q-Q plots aid in examining the residuals of our points. The first primarily helps to show if variance remains constant across our variables. The second shows a pretty normal distribution but we do observe somewhat more variance in the tails. The third and final plot helps determine if the order of the data is important, usually this is needed for time sorted data but we noticed this set is sorted alphabetically by origin point so we included this to see if any patterns presented themselves. 
 
-From these plots the primary change from the non-log version is that the extremes now show significantly less variance so the confidence in predictions for extremes may be greater.
+1. We assume the relationships are linear as all t-tests returned significant. Even while our Beta for the first interaction term is essentially 0.00000166, it is still incredibly significant and its confidence interval does not include 0, as such it is linear.
+
+2. Random sampling is assumed.
+
+3. We do observe significant variance across x-values, Sample variation is present.
+
+4. None of our independent variables contain direct information as to the fare of the corresponding ticket.
+
+5. As shown in the final plot as well as the first, no discernible patterns between dependent variables are present which have not been accounted for by our interaction terms.
 
 ```{r}
 par(mfrow=c(1,3))
@@ -206,17 +173,37 @@ plot(lm.mult2$residuals)
 
 Show that the return to another year of education, holding experience fixed is equal to $\beta 1 + \beta_3 (experience)$.
 
-#### part B
+$ln(y) = .044 + (experience * .003)$
+
+#### Part B
 
 State the null hypothesis that the return to education does not depend on the level of experience. What is the appropriate alternative hypothesis?
 
+$H_O \neq Experience_{level}$
+
+$H_A = Experience_{level}$
 
 #### Part C
 
 Use the data in Wage2 to test the null hypothesis against your stated alternative.
 
+```{r}
+wage2 <- read_excel("wage2.xls")
+
+wage_lm <- lm(log10(wage)~education*expereince, wage2)
+
+summary(wage_lm) %>% pander()
+```
+
 #### Part D
 
 Let $\theta_1$ denote the return to education, when experience is 10 and $\theta_1 = \beta_1$ and a 95% confidence interval for for $\widehat{\theta_1}$. (hint: write $\beta_1 = \theta_1 - 10\beta_3$ and plug this into the equation and rearrange). This give the regression for obtaining the confidence interval for $\theta_1$.
+
+
+```{r}
+confint(wage_lm, level = 0.95) %>%
+pander(caption= "HW 5 Estimators 95% Conf Int's")
+```
+
 
 ##
