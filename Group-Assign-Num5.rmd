@@ -1,5 +1,5 @@
 ---
-title: "HW 4 - Tyson Brost, Chase Hatch, Isaac Palmer, Rachel Robertson"
+title: "HW 5 - Tyson Brost, Chase Hatch, Isaac Palmer, Rachel Robertson"
 output: 
   html_document:
     theme: cerulean
@@ -59,21 +59,23 @@ pander(caption= "HW 4 Multiple regression results w/ extra estimators")
 ```
 
 $$
-\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{ldistance} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{lpassen} +  \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{ldist:lpassen}  + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{4i}}_\text{LargeShare} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{5i}}_\text{y00} +  \overbrace{\beta_6}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{6i}}_\text{y97} +\epsilon_i
+\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{distance} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} + \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{3i}}_\text{LargeShare} + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{dist:passen}  +  \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{3i}X_{2i}}_\text{LargeShare:passen} +\epsilon_i
 $$
 
 
 ##### + Squared term
 
 ```{r}
-lm.mult3 <-lm(fare ~ distsq + passen + dist:passen + LargeShare + LargeShare:passen, data=IO_airfare)
+lm.mult3 <-lm(fare ~ distsq + passen + distsq:passen + LargeShare + LargeShare:passen, data=IO_airfare)
 summary(lm.mult3) %>%
 pander(caption= "HW 4 Multiple regression results w/ extra estimators")
 ```
 
 Interpret your regression equation and explain what this new squared term tells you about the dependent variable.
 
-
+$$
+\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{dist(squared)} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} + \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{y-int}}} + \underbrace{X_{3i}}_\text{LargeShare} + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{dist(squared):passen} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{3i}X_{2i}}_\text{LargeShare:passen} +\epsilon_i
+$$
 
 
 
@@ -84,8 +86,12 @@ lm.mult4 <-lm(fare ~ ldistsq + passen + ldist:passen + LargeShare + LargeShare:p
 summary(lm.mult4) %>%
 pander(caption= "HW 4 Multiple regression results w/ extra estimators")
 ```
+$$
+\underbrace{Y_i}_\text{fare} \underbrace{=}_{\sim} \overbrace{\beta_0}^{\stackrel{\text{y-int}}{\text{base fare}}} + \overbrace{\beta_1}^{\stackrel{\text{slope}}{\text{baseline}}} \underbrace{X_{1i}}_\text{Ln(dist(squared))} + \overbrace{\beta_2}^{\stackrel{\text{change in}}{\text{y-int}}}  \underbrace{X_{2i}}_\text{passen} +   \overbrace{\beta_3}^{\stackrel{\text{change in}}{\text{y-int}}} + \underbrace{X_{3i}}_\text{LargeShare} + \overbrace{\beta_4}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{1i}X_{2i}}_\text{Ln(dist(squared)):passen} + \overbrace{\beta_5}^{\stackrel{\text{change in}}{\text{slope}}} \underbrace{X_{3i}X_{2i}}_\text{LargeShare:passen} +\epsilon_i
+$$
 
- This will create a log-lin model or a lin-log model.  Interpret the findings with this new variable.  What does it mean?
+
+This will create a log-lin model or a lin-log model.  Interpret the findings with this new variable.  What does it mean?
 
 ##### Best Regression
 
