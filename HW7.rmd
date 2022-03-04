@@ -1,0 +1,136 @@
+---
+title: "Homework 7 "
+author: "Tyson Brost"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:  
+    keep_md: true
+    toc: false
+    toc_float: false
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+    theme: journal
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+#install.packages("tidyverse") # run this line once in console to get package
+library(tidyverse)
+library(pander)
+library(readxl)
+library(car)
+library(lmtest)
+```
+
+```{r load_data}
+# Use this R-Chunk to import all your datasets!
+traffic2 <- read_excel("traffic2.xls")
+traffic2 <- select(traffic2, c(prcfat, wkends, unem, spdlaw, beltlaw, feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec, year))
+```
+
+## {.tabset .tabset-pills .tabset-fade}
+
+### Problem #1
+
+##### When the errors in a regression model have AR(1) serial correlation, why do the OLS standard errors tend to underestimate the sampling variation in the estimated beta’s?  Is it always true that the OLS standard errors are too small?
+
+If a given periods value give information about the following period this has accounted for part of the total variation, thus allowing the model to predict some of the total variation outside of our variables. If for example total variation is 100, an our auto correlation is 10 then by the time our model comes into play it is only being used to account for the remaining 90 variation. If autocorrelation and other OLS issues are not present our estimators should be correcy, though if any errors or issues exist it will result in smaller than correct OLS standard errors.
+
+### Problem #2
+
+Use the TRAFFIC2 data set to complete the following exercise
+
+#### OLS Regression
+Run an OLS regression on prcfat using a linear time trend, monthly dummy variables and the variables wkends, unem, spdlaw, and beltlaw. Report the results of your regression equation.
+
+```{r, echo =FALSE}
+lm.mult2 <-lm(prcfat ~ year + feb + mar +apr +may +jun +jul +aug +sep +oct +nov +dec + wkends + unem + spdlaw +beltlaw, data=traffic2)
+```
+
+```{r}
+
+lm.mult2 <-lm(prcfat ~ year + feb + mar +apr +may +jun +jul +aug +sep +oct +nov +dec + wkends + unem + spdlaw +beltlaw, data=traffic2)
+summary(lm.mult2) %>%
+pander(caption= "HW 5 Multiple regression results")
+
+```
+
+```{r}
+par(mfrow=c(1,3))
+plot(lm.mult2,which=1:2)
+plot(lm.mult2$residuals)
+```
+
+
+#### Durbin Watson Test
+
+Use the Durbin Watson test to test for autocorrelation in the data. What are the results of the test and what can you conclude?
+
+```{r}
+durbinWatsonTest(lm.mult2)
+```
+
+The results of this test are significant, we must reject the null and conclude that there is autocorrelation within this dataset. The auto correlation value is estimated to be 0.277 so 27.7% of all variation is being accounted
+
+####  Breusch-Godfrey Test {.tabset .tabset-pills .tabset-fade}
+Use the Breusch-Godfrey test at the orders of 1, 2 and 3 to test for autocorrelation. 
+
+##### Order 1
+
+```{r}
+bgtest(lm.mult2, order =1)
+```
+
+The null Hypothesis here is that auto correlation within one time period to the next, feb to march, in this case our P-val is significant and we must reject the null and conclude that one time period is correlated with the next time period.
+
+
+##### Order 2
+
+```{r}
+bgtest(lm.mult2, order =2)
+```
+
+The null Hypothesis here is that auto correlation within one time period to the 2nd following period, feb to april, in this case our P-val is significant and we must reject the null and conclude that one time period is correlated with the period after the next period.
+
+##### Order 3
+
+```{r}
+bgtest(lm.mult2, order =3)
+```
+
+The null Hypothesis here is that auto correlation within one time period to the 2nd following period, feb to may, in this case our P-val is significant and we must reject the null and conclude that one time period is correlated with the period after the period after next period.
+
+####
+
+##### Differences 
+Is there a difference between the three orders?  What can you conclude for these three different orders about autocorrelation?
+
+Each test for autocorrelation up to the order of the test, 1 period, 2 periods etc. All P-vals where significant so we must conclude that auto correlation is present up to at least the 3rd degree.
+
+
+### Problem #3
+
+State whether the following statements are true or false.  Briefly justify your answer.
+
+#### When autocorrelation is present, OLS estimators are biased as well as inefficient.
+  
+  False: The estimators are still unbiased, but they are now inefficient.
+
+#### The Durbin Watson test assumes that the variance of the error term is homoscedastic
+
+True: We assume and test against the null the $E(E_iE_j \neq 0) $
+
+#### A significant Durbin Watson value does not necessarily mean there is autocorrelation of the first order.
+
+False: The Durbin watson test is for AR1 and thus tests for auto correlation up to the first order, as there is no order below, if the result is significant then we do have correlation in the first order.
+
+#### In the presence of autocorrelation, the conventionally computed variances and standard errors of forecast values are inefficient.
+
+True: the OLS estimators and thus SE and variances would be inefficient in the presence of auto correlation.
+

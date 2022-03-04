@@ -174,3 +174,15 @@ coeftest(lm.mult6, vcov = vcovHC(lm.mult6, type = "HC1"))
 As shown above if using normal SE values the significance level can only be rejected at the 0.1 level where as when using robust SE we can reject our null at a level of 0.05.
 
 ##
+
+head(Bren)
+names(Bren)
+Bren <- drop_na(Bren)
+
+agtoag <- lm(data = Bren, `Inflation Adjusted Price per Committed Acre-Foot` ~ `Average Annual Acre-Feet` + `Year`  + `State` + `Lease Duration`)
+summary(agtoag)
+dwtest(agtoag)
+bgtest(agtoag, order=7)
+bgtest(agtoag, order=4)
+bgtest(agtoag, order=2)
+bgtest(agtoag, order=1)
