@@ -31,10 +31,10 @@ library(gghighlight)
 
 ```{r load_data}
 # Use this R-Chunk to import all your datasets!
-Q1 <- read_csv("Q1.csv")
-Q2 <- read_csv("Q2.csv")
-Q3 <- read_csv("Q3.csv")
-Q4_2020 <- read_csv("Q4(2020).csv")
+Q1 <- read_csv("../../Data/Econ-388-Final/Q1.csv")
+Q2 <- read_csv("../../Data/Econ-388-Final/Q2.csv")
+Q3 <- read_csv("../../Data/Econ-388-Final/Q3.csv")
+Q4_2020 <- read_csv("../../Data/Econ-388-Final/Q4(2020).csv")
 ```
 
 ## Background
@@ -74,6 +74,7 @@ FullDat2_Non <- FullDat %>%
 
 FullDat2_Non1 <- FullDat %>%
   filter(ITIN_GEO_TYPE == "Non-Continguous Domestic")
+FullDat2_Non1_Filt <- filter(FullDat2_Non1, ITIN_YIELD <10)
 
 FullDat2_Non <- FullDat2_Non %>%
   mutate(Fare.cut = cut(ITIN_FARE,
@@ -108,6 +109,20 @@ FullDat2_Con <- FullDat2_Con %>%
   ungroup()
 
 FullDat2_Con$color <- "cyan3"
+
+table1 <-favstats(`ITIN_YIELD` ~ QUARTER + DISTANCE_GROUP,data=FullDat2_Non1)
+table1 <- table1 %>% 
+     separate(QUARTER.DISTANCE_GROUP, into = c("QUARTER", "DISTANCE_GROUP"), "[.]")
+table1$DISTANCE_GROUP <- as.numeric(table1$DISTANCE_GROUP)
+
+table2 <- order(table1, table1$QUARTER, decreasing=TRUE)
+
+
+table3 <-favstats(`ITIN_YIELD` ~ QUARTER + DISTANCE_GROUP,data=FullDat2_Con1)
+table3 <- table3 %>% 
+     separate(QUARTER.DISTANCE_GROUP, into = c("QUARTER", "DISTANCE_GROUP"), "[.]")
+table3$DISTANCE_GROUP <- as.numeric(table3$DISTANCE_GROUP)
+#table3 <- filter(table3, table3$DISTANCE_GROUP <20)
 ```
 
 ## Data Visualization
@@ -127,6 +142,27 @@ ggplot(data=FullDat_Filt, )+
   coord_flip() +
   theme_bw()+
   theme(axis.text.y = element_text(angle = 45, vjust = 0.5, hjust=1))
+```
+
+```{r}
+ggplot(data=FullDat2_Non1_Filt, )+
+  geom_violin(aes(x=QUARTER, y=ITIN_YIELD, color=QUARTER))+
+  #geom_sina(aes(x=as.factor(ITIN_GEO_TYPE), y=ITIN_FARE, color=as.factor(ITIN_GEO_TYPE)),alpha=0.15)+
+  facet_grid(rows = ~DISTANCE_GROUP)+
+  #scale_y_continuous(limits = quantile(FullDat$ITIN_FARE, c(0.05, 0.95)))+
+  scale_y_continuous(breaks = waiver(), labels = waiver(), n.breaks = 7)+
+  labs(color= "", title= "Distribution of fares by quarter")+ 
+  ylab("Fare (Dollars)")+
+  xlab("Flight Type")+
+  #gghighlight() +
+  theme_bw()
+
+
+ggplot(data=table3,)+
+  geom_line(aes(x=DISTANCE_GROUP, y=mean))+
+  geom_point(aes(x=DISTANCE_GROUP, y=mean))+
+  facet_grid(rows= ~QUARTER)+
+  theme_bw()
 ```
 
 

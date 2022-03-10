@@ -124,7 +124,7 @@ State whether the following statements are true or false.  Briefly justify your 
 
 #### The Durbin Watson test assumes that the variance of the error term is homoscedastic
 
-True: We assume and test against the null the $E(E_iE_j \neq 0) $
+True: We assume and test against the null the $E(E_iE_j \neq 0)$
 
 #### A significant Durbin Watson value does not necessarily mean there is autocorrelation of the first order.
 

@@ -1,7 +1,7 @@
 ---
 title: "Homework 7 "
 author: "Tyson Brost"
-date: "March 03, 2022"
+date: "March 04, 2022"
 output:
   html_document:  
     keep_md: true
@@ -118,7 +118,7 @@ durbinWatsonTest(lm.mult2)
 
 ```
 ##  lag Autocorrelation D-W Statistic p-value
-##    1       0.2775695      1.430032       0
+##    1       0.2775695      1.430032   0.002
 ##  Alternative hypothesis: rho != 0
 ```
 
@@ -197,7 +197,7 @@ State whether the following statements are true or false.  Briefly justify your 
 
 #### The Durbin Watson test assumes that the variance of the error term is homoscedastic
 
-True: We assume and test against the null the $E(E_iE_j \neq 0) $
+True: We assume and test against the null the $E(E_iE_j \neq 0)$
 
 #### A significant Durbin Watson value does not necessarily mean there is autocorrelation of the first order.
 
