@@ -27,15 +27,29 @@ library(readr)
 library(ggforce)
 library(mosaic)
 library(gghighlight)
+
+library(lmtest)
+library(tseries)
+library(AER)
+library(wooldridge)
 ```
 
 ```{r load_data}
 # Use this R-Chunk to import all your datasets!
 Q1 <- read_csv("../../Data/Econ-388-Final/Q1.csv")
 Q2 <- read_csv("../../Data/Econ-388-Final/Q2.csv")
+FullDat <- rbind(Q1,Q2)
+rm(Q1)
+rm(Q2)
 Q3 <- read_csv("../../Data/Econ-388-Final/Q3.csv")
+FullDat <- rbind(FullDat,Q3)
+rm(Q3)
 Q4_2020 <- read_csv("../../Data/Econ-388-Final/Q4(2020).csv")
+FullDat <- rbind(FullDat,Q4_2020)
+rm(Q4_2020)
+FullDat <- FullDat[,-14]
 ```
+
 
 ## Background
 
@@ -51,19 +65,15 @@ This is a visual that shows the type of study we originally wanted to conduct. T
 
 ```{r tidy_data}
 # Use this R-Chunk to clean & wrangle your data!
-FullDat <- rbind(Q1,Q2)
-rm(Q1)
-rm(Q2)
-FullDat <- rbind(FullDat,Q3)
-rm(Q3)
-FullDat <- rbind(FullDat,Q4_2020)
-rm(Q4_2020)
-FullDat <- FullDat[,-14]
+
 FullDat$ITIN_GEO_TYPE <- factor(case_when(FullDat$ITIN_GEO_TYPE == 1 ~ "Non-Continguous Domestic", FullDat$ITIN_GEO_TYPE == 2 ~ "Continguous Domestic"))
 FullDat_Filt <- filter(FullDat, ITIN_FARE >= 25 & ITIN_FARE <1500)
+FullDat_Filt <- filter(FullDat_Filt, ITIN_YIELD <2)
 
 
+```
 
+```{r Table building}
 
 x.axis.breaks <- c(0,                      # binwidth = 100
                    seq(100, 500, 25),     # binwidth = 10
@@ -72,11 +82,10 @@ x.axis.breaks <- c(0,                      # binwidth = 100
 FullDat2_Non <- FullDat %>%
   filter(ITIN_GEO_TYPE == "Non-Continguous Domestic")
 
-FullDat2_Non1 <- FullDat %>%
-  filter(ITIN_GEO_TYPE == "Non-Continguous Domestic")
-FullDat2_Non1_Filt <- filter(FullDat2_Non1, ITIN_YIELD <10)
 
-FullDat2_Non <- FullDat2_Non %>%
+FullDat2_Non1_Filt <- filter(FullDat2_Non, ITIN_YIELD <10 & ITIN_YIELD >0.05)
+
+FullDat2_Non_T <- FullDat2_Non %>%
   mutate(Fare.cut = cut(ITIN_FARE,
                          breaks = x.axis.breaks)) %>%
   count(Fare.cut, ITIN_GEO_TYPE) %>%
@@ -88,6 +97,17 @@ FullDat2_Non <- FullDat2_Non %>%
   mutate(ymin = lag(ymax)) %>%
   mutate(ymin = ifelse(is.na(ymin), 0, ymin)) %>%
   ungroup()
+
+
+table1 <-favstats(`ITIN_YIELD` ~ QUARTER + DISTANCE_GROUP,data=FullDat2_Non)
+table1 <- table1 %>% 
+     separate(QUARTER.DISTANCE_GROUP, into = c("QUARTER", "DISTANCE_GROUP"), "[.]")
+table1$DISTANCE_GROUP <- as.numeric(table1$DISTANCE_GROUP)
+
+
+
+
+#table2 <- order(table1, table1$QUARTER, decreasing=TRUE)
 
 FullDat2_Con <- FullDat %>%
   filter(ITIN_GEO_TYPE == "Continguous Domestic")
@@ -107,16 +127,7 @@ FullDat2_Con <- FullDat2_Con %>%
   mutate(ymin = lag(ymax)) %>%
   mutate(ymin = ifelse(is.na(ymin), 0, ymin)) %>%
   ungroup()
-
 FullDat2_Con$color <- "cyan3"
-
-table1 <-favstats(`ITIN_YIELD` ~ QUARTER + DISTANCE_GROUP,data=FullDat2_Non1)
-table1 <- table1 %>% 
-     separate(QUARTER.DISTANCE_GROUP, into = c("QUARTER", "DISTANCE_GROUP"), "[.]")
-table1$DISTANCE_GROUP <- as.numeric(table1$DISTANCE_GROUP)
-
-table2 <- order(table1, table1$QUARTER, decreasing=TRUE)
-
 
 table3 <-favstats(`ITIN_YIELD` ~ QUARTER + DISTANCE_GROUP,data=FullDat2_Con1)
 table3 <- table3 %>% 
@@ -240,6 +251,134 @@ pander(favstats(ITIN_FARE ~ QUARTER, data=FullDat2_Non1)[c("QUARTER", "Q1","medi
 ```{r}
 pander(favstats(ITIN_FARE ~ QUARTER, data=FullDat2_Con1)[c("QUARTER", "Q1","median", "mean","Q3", "sd","n")], caption= "Summary table of Continguous flight Fares by Quarter")
 ```
+
+
+
+## Regressions
+
+
+```{r}
+#names(FullDat2_Non1_Filt)
+
+
+samp <- FullDat_Filt[sample(nrow(FullDat_Filt), 20000), ]
+samp <- samp[,c(-2:-6)]
+samp$lPASSENGERS <- log(samp$PASSENGERS)
+samp$SQRT_1over_DG_x_MF <- sqrt( 1/(samp$DISTANCE_GROUP*samp$MILES_FLOWN))
+#samp$lPASSENGERS2 <- (1/log(samp$PASSENGERS))^2
+#samp$DG_MF <- sqrt(sqrt( 1/(samp$DISTANCE_GROUP/samp$MILES_FLOWN)))
+#samp$ITIN_YIELD_2 <- samp$ITIN_YIELD^2
+
+samp$ROUNDTRIP <- as.factor(samp$ROUNDTRIP)
+samp$ITIN_GEO_TYPE <- as.factor(samp$ITIN_GEO_TYPE)
+
+
+pairs(samp, panel=panel.smooth, col=rgb(.1,.1,.1,.1))
+#pairs(cbind(Res = lm2$residuals, samp), panel=panel.smooth, col = as.factor(samp$Xvar))
+
+
+#ggplot(aes(samp$lPASSENGERS, log(samp$ITIN_YIELD), col="firebrick"), data=samp)+
+  #geom_jitter(width = 0.15, shape=16,alpha=0.1)+
+  #geom_smooth()
+
+
+
+#FullDat_Filt$SQRT_1over_DG_x_MF <- sqrt( 1/(FullDat_Filt$DISTANCE_GROUP*FullDat_Filt$MILES_FLOWN))
+
+```
+
+
+```{r}
+lm1 <- lm(ITIN_YIELD ~ lPASSENGERS + DISTANCE_GROUP + ROUNDTRIP + lPASSENGERS:DISTANCE_GROUP + ITIN_GEO_TYPE, data= samp)
+
+
+#lm1.1 <- lm(ITIN_YIELD ~ log(PASSENGERS) + DISTANCE_GROUP + as.factor(ROUNDTRIP), data= samp)
+#
+
+summary(lm1) %>% pander
+#summary(lm1.1)
+```
+
+```{r}
+bptest(lm1)
+vif(lm1)
+```
+
+
+```{r eval=FALSE, include=FALSE}
+#summary(lm2)
+#lm2 <- lm(ITIN_YIELD ~ SQRT_1over_DG_x_MF + as.factor(ROUNDTRIP) + as.factor(ROUNDTRIP):SQRT_1over_DG_x_MF + as.factor(ITIN_GEO_TYPE) + as.factor(ITIN_GEO_TYPE):SQRT_1over_DG_x_MF + as.factor(ITIN_GEO_TYPE):as.factor(ROUNDTRIP), data= samp)
+```    
+
+```{r}   
+
+lm3 <- lm(ITIN_YIELD ~ lPASSENGERS + SQRT_1over_DG_x_MF + ROUNDTRIP + ITIN_GEO_TYPE, data= samp)
+summary(lm3) %>% pander
+#lm3.1 <- ivreg(ITIN_YIELD ~ SQRT_1over_DG_x_MF + log(PASSENGERS) + as.factor(ROUNDTRIP) + #log(PASSENGERS):SQRT_1over_DG_x_MF + as.factor(ITIN_GEO_TYPE) | log(MILES_FLOWN) + log(PASSENGERS) + #as.factor(ROUNDTRIP) + log(PASSENGERS):SQRT_1over_DG_x_MF + as.factor(ITIN_GEO_TYPE) , data= samp)
+
+
+```
+
+
+
+```{r}
+bptest(lm3)
+vif(lm3)
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+library(car)
+library(plotly)
+library(reshape2)
+library(tidyverse)
+#Graph Resolution (more important for more complex shapes)
+graph_reso <- 0.025
+
+#Setup Axis
+axis_x <- seq(min(samp$SQRT_1over_DG_x_MF), max(samp$SQRT_1over_DG_x_MF), by = graph_reso)
+axis_y <- seq(min(samp$lPASSENGERS), max(samp$lPASSENGERS), by = graph_reso)
+axis_col <- seq(min(samp$ROUNDTRIP), max(samp$ROUNDTRIP), by =1)
+axis_f <- as.factor(c("Continguous Domestic", "Non-Continguous Domestic"))
+
+#Sample points
+lmnew <- expand.grid(SQRT_1over_DG_x_MF = axis_x, PASSENGERS = axis_y, ROUNDTRIP = axis_col, ITIN_GEO_TYPE = axis_f ,  KEEP.OUT.ATTRS=F)
+lmnew$Z <- predict.lm(lm3, newdata = lmnew)
+lmnew <- acast(lmnew, PASSENGERS ~ SQRT_1over_DG_x_MF , value.var = "Z") #y ~ x
+samp %>% 
+  filter(ITIN_GEO_TYPE == "Continguous Domestic") %>%
+  plot_ly(., 
+               x = ~SQRT_1over_DG_x_MF, 
+               y = ~lPASSENGERS, 
+               z = ~ITIN_YIELD, 
+               #text = rownames(samp %>% drop_na()),
+               type = "scatter3d",
+               mode ="markers",
+               color = ~as.factor(ROUNDTRIP),
+               alpha= 0.7) %>%
+              layout(title= list(text = "Continguous Domestic Flights (Lower 48)"))
+
+samp %>% 
+  filter(ITIN_GEO_TYPE == "Non-Continguous Domestic") %>%
+  plot_ly(., 
+               x = ~SQRT_1over_DG_x_MF, 
+               y = ~lPASSENGERS, 
+               z = ~ITIN_YIELD, 
+               #text = rownames(samp %>% drop_na()),
+               type = "scatter3d",
+               mode ="markers",
+               color = ~as.factor(ROUNDTRIP),
+               alpha= 0.7) %>%
+              layout(title= list(text = "Non-Continguous Domestic Flights (Outside Lower 48)"))
+
+
+```
+
 
 
 ## Conclusions

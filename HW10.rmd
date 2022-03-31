@@ -1,0 +1,122 @@
+---
+title: "Homework 9 "
+author: "Tyson Brost"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:  
+    keep_md: true
+    toc: false
+    toc_float: false
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+    theme: journal
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+#install.packages("tidyverse") # run this line once in console to get package
+library(tidyverse)
+library(pander)
+library(readxl)
+library(tseries)
+library(mosaic)
+library(car)
+#install.packages("AER")
+library(AER)
+
+intdef <- read_excel("intdef.xls", na=".")
+
+data <- intdef %>% 
+  filter(year != 1948) %>% 
+  select(c(1:13))
+
+
+model.1 <- lm(i3~inf, data = data)
+
+summary(model.1) %>% pander()
+
+
+model.2 <- ivreg(i3~inf|inf_1, data= data)
+summary(model.2)
+```
+
+
+## {.tabset .tabset-pills .tabset-fade}
+
+### Problem #1 - 
+
+##### Consider the following simple regression model where scrap is the firm scrap rate and grant is a dummy variable indicating whether a firm received a job training grant.
+
+![ ](hm9.png)
+
+#### What else might contribute to scrap that is not in this current model
+
+The current model literally just includes whether or not a company received a grant for training. the actual amount of training completed, number of employees, number of employees trained, types of training, salaries, work environment and uniion information could also be impactful on this model.
+
+####  Estimate the simple regression model using the data in JTRAIN estimate the above model and interpret your findings.
+
+```{r, echo =FALSE}
+lm.mult2 <-lm(scrap ~ grant, data=JT)
+summary(lm.mult2)
+```
+
+We calculate an insignificant variable of grants, with a P-val of 0.5, and an Adj-R^2 of -0.001, based on this model we can't conclude that grants have a significant effect on the scrap rate.
+
+####  Calculate the Jarque-bera test in R studio. You will need to install the ‘tseries’ package to conduct this test.  Interpret your findings of this test
+
+```{r, echo =FALSE}
+jarque.bera.test(residuals(lm.mult2))
+```
+
+With such a large Test-stat and low P-value we would reject the null Hypo. that the data are normally distributed and state significant evidence of the alternative, that the data (error terms) is not normally distributed.
+
+####  What can be done to the model based upon your results from the Jarque-bera test?
+
+Additional transformations could be performed on the data, if autocorrelation is a worry then lags or leads could be introduced, this would all be with the goal of decreasing the Test-stat to a level that we could fail to reject our null that the data is normally distributed.
+
+### Problem #2
+
+#### Create a summary for each variable and report what this tells you about each variable. Are there any potential outliers for any variable?  If so what should you do? 
+
+```{r}
+
+JT <- filter(JT, JT$employees != ".")
+JT <- filter(JT, JT$sales != ".")
+JT <- filter(JT, JT$avsalary != ".")
+JT <- filter(JT, JT$totalhours != ".")
+
+map(JT, favstats)
+```
+
+Based on the above summaries it may be worth looking into the sales and totalhours/totaltrain variables, the former having a significant gap within its quartiles and the later two being heavily skewed. Removal of these outliers could help us better understand a relationship within a smaller portion of the population.
+
+#### If necessary from part a, appropriately clean up the data and then create a lag variable of one period for the sales variable. Run the following regression equation, report and evaluate the results of the regression
+
+```{r}
+JT <- filter(JT, JT$sales > 1501877 & JT$sales < 8347242)
+JT <- filter(JT, JT$totalhours < 40)
+JT <- filter(JT, JT$totaltrain < 20.25)
+JT$sales_lag <- lag(JT$sales, n=1)
+JT <- JT %>% drop_na()
+
+lm.mult2 <-lm(scrap ~ grant + as.numeric(sales) + as.numeric(sales_lag), data=JT)
+summary(lm.mult2)
+jarque.bera.test(residuals(lm.mult2))
+```
+
+
+![ ](hm9.2.png)
+
+Grant is now significant at a 0.05% significance level neither sales nor sales lagged are though. Our P-val has been significantly improved but still lacks significance. The JB test is still rejecting the null but the statistics has dropped from 800 to 80 so there was a ten fold movement closer to 0.
+
+#### Are there any problems with this regression equation that you need to test for (think of the statistical diseases). If so report the results of those tests and then explain what method you would need to do to correct for those diseases.
+
+There is also likely autocorrelation between the variables such as number of employee's and many of the other variables running the VIF test to verify and then if needed we would lag some of these variables as well. though it is difficult to do this to some extent and maintain a useful and interpretable dataset.
+ 
+

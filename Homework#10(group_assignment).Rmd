@@ -1,0 +1,86 @@
+---
+title: 'Homework #10 (group assignment)'
+author: "Rachel Robertson, Isacc Palmer, Chase Hatch, Tyson Brost"
+date: "3/18/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(readxl)
+library(pander)
+library(tidyverse)
+library(AER)
+intdef <- read_excel("intdef.xls", na = ".")
+#View(intdef)
+
+intdef <- intdef %>% 
+  filter(year != 1948) %>% 
+  select(c(1:13))
+```
+## Problem #1
+
+### A.
+
+Estimate the equation by OLS omiiting the firs time period for later comparisons. Report the results in the usual form and interpret them. 
+```{r}
+i3t <- lm(i3~inf, data = intdef)
+pander(summary(i3t))
+```
+
+##### Explanation:
+This is a simple regression of the 3 month T-bill rate to the inflation rate, the first year was already omitted so this results are already lagged. 
+
+##### Interpretation:
+The P-value is quite small, which means our results are significant. The F statistic is quite large which is also wonderful. The adjusted R-Squared is wonderfully large as well if we speaking in "real world" terms. It means we are explaining 45.11% of the data.  The standard errors are also small relative to the beta, which is good news. 
+
+### B.
+
+```{r}
+model.2 <- ivreg(i3~inf|inf_1, data= intdef) #(applies weight to it)
+summary(model.2)
+```
+##### Interpretation:
+The IV estimate is beautifully similar to the Beta 1 estimate, it serves as an excellent proxy. Significantly our interval for B1 based on our SD error terms now includes 1, meaning that we can state sufficient evidence that a change of 1 in inf results in a change of 1 in i3.
+
+### C. 
+```{r}
+changinglm <- lm(ci3~cinf, data = intdef)
+pander(summary(changinglm))
+# str(intdef) (see what is happening in the data)
+
+```
+
+As shown above the R^2 term here is significantly less than those of the above, showing us that changes inflation are much less effective in predicting the changes 3month t-bills than the actual values are in predicting the actual values. This means there is possibly a lot more auto correlation going on than we may have thought.
+
+### D. 
+
+```{r}
+
+intdef$cinf_1 <- lag(intdef$cinf, n = 1, default = NA)
+intdef <- intdef %>% 
+  filter(year != 1949)
+intdef2 <- lm(cinf ~ intdef$cinf_1, data = intdef)
+summary(intdef2) # str(intdef) (see what is happening in the data)
+```
+
+```{R eval=FALSE, include=FALSE}
+# reference:
+# (Page 140) 
+#https://economics.ut.ac.ir/documents/3030266/14100645/Wooldridge%20-%20Econometrics%20Teachers%27%20Book.pdf  
+```
+
+##### Interpretation:
+change in inf t-1 cannot be used for a IV because the change in inf and change in inf t-1 are basically uncorrelated. 
+
+## Problem #2
+
+Explain why and when a researcher should use two stage least squares.  How does it differ from simple OLS regression? 
+
+##### Explaination:
+
+A researcher should use two stage least squares when they have endogeneity, so the independent variables are correlated with the dependent variable's error terms.
+There is also the other case where the explanatory variables are influenced by the dependent variable, while at the same time the dependent variable is being driven by the explanatory variables.
+Researchers should use two least squares because it helps to take care of the situation when both sides of the regression equation are driving each other by using instrumental variables
+It differs from OLS regressions because with the two least squares we have a normal regression used to create a proxy variable for one of the endogenous variables so we end up having a regression within the regression
+
